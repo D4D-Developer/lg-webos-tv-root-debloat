@@ -51,20 +51,58 @@ function directionalScore(fromRect, toRect, direction) {
   }
 }
 
+// webOS's real engine (Chrome 53) predates scrollIntoView's options-object
+// form (`{block, inline}` - landed around Chrome 61+). Passing one there
+// doesn't throw, so the try/catch this used to have never caught anything
+// - it silently gets coerced into the legacy boolean API instead, which
+// unconditionally aligns the element's top/left edge to the scroll
+// container's, even when the element is already fully visible. Confirmed
+// live on-device via DevTools: an already-on-screen settings row forced
+// the drawer's scrollTop from 50 to 757. Barely noticeable back when the
+// settings drawer's content was short, but became a constant, disruptive
+// jump-scroll on every single focus move once the Pinned Apps list grew
+// to 19 real apps. This replacement only uses getBoundingClientRect(),
+// scrollTop, and scrollLeft - all supported on this engine forever - and
+// only moves the scroll position the minimum amount actually needed
+// (true "nearest" semantics), covering both the settings drawer's
+// vertical scroll and the Apple TV app row's horizontal scroll.
+function nearestScrollableAncestor(el) {
+  let node = el.parentElement;
+  while (node && node !== document.body) {
+    const style = getComputedStyle(node);
+    const scrollsY = /(auto|scroll)/.test(style.overflowY) && node.scrollHeight > node.clientHeight;
+    const scrollsX = /(auto|scroll)/.test(style.overflowX) && node.scrollWidth > node.clientWidth;
+    if (scrollsY || scrollsX) return node;
+    node = node.parentElement;
+  }
+  return null;
+}
+
+function scrollIntoViewNearest(el) {
+  const container = nearestScrollableAncestor(el);
+  if (!container) return;
+  const elRect = el.getBoundingClientRect();
+  const containerRect = container.getBoundingClientRect();
+
+  if (elRect.top < containerRect.top) {
+    container.scrollTop -= containerRect.top - elRect.top;
+  } else if (elRect.bottom > containerRect.bottom) {
+    container.scrollTop += elRect.bottom - containerRect.bottom;
+  }
+
+  if (elRect.left < containerRect.left) {
+    container.scrollLeft -= containerRect.left - elRect.left;
+  } else if (elRect.right > containerRect.right) {
+    container.scrollLeft += elRect.right - containerRect.right;
+  }
+}
+
 function focus(el) {
   if (!el || el === currentEl) return;
   if (currentEl) currentEl.classList.remove("is-focused");
   currentEl = el;
   currentEl.classList.add("is-focused");
-  try {
-    // Keeps focus inside scrollable rows (e.g. the Apple TV app row) in
-    // view. Wrapped defensively: the options-object form of scrollIntoView
-    // is a newer addition and must not take down focus handling if it's
-    // unsupported somewhere.
-    currentEl.scrollIntoView({ block: "nearest", inline: "nearest" });
-  } catch {
-    /* no-op: focus still moved, just without auto-scroll */
-  }
+  scrollIntoViewNearest(currentEl);
 }
 
 function moveFocus(direction) {
@@ -178,6 +216,34 @@ export function releaseScope() {
     focusFirst();
   }
   preScopeEl = null;
+}
+
+// The settings drawer rebuilds its entire DOM from scratch on every single
+// interaction (clear + re-render, not a targeted patch) - see
+// settingsDrawer.js's render(). That destroys whatever element `currentEl`
+// pointed to, so the very next arrow-key press finds it missing from the
+// fresh `[data-focusable]` list and falls back to focusing the first
+// element in scope - reported as "selection jumps to the top of Settings
+// after selecting anything." These two let a caller capture the focused
+// element's position within a container before tearing it down, then
+// restore focus to the element at that same position once the container
+// is rebuilt. Index-based (not an identity/key match) because every
+// render()-triggering control in the settings drawer preserves the total
+// focusable count and ordering of everything before it - the one
+// exception, a collapsible group header toggling its own body open/closed,
+// still keeps that same header at the same index either way, since the
+// change only adds/removes elements after it.
+export function getFocusIndexWithin(container) {
+  if (!currentEl) return -1;
+  const list = Array.from(container.querySelectorAll("[data-focusable]")).filter(isVisible);
+  return list.indexOf(currentEl);
+}
+
+export function focusIndexWithin(container, index) {
+  if (index < 0) return;
+  const list = Array.from(container.querySelectorAll("[data-focusable]")).filter(isVisible);
+  if (list.length === 0) return;
+  focus(list[Math.max(0, Math.min(index, list.length - 1))]);
 }
 
 export function focusFirst(container) {

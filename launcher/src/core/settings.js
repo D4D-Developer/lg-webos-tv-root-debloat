@@ -23,7 +23,6 @@ const DEFAULTS = {
     "primevideo",
     "jiohotstar",
     "appletv",
-    "spotify",
     "plex",
     "browser",
   ],

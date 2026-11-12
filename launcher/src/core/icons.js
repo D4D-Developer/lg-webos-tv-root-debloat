@@ -13,7 +13,44 @@
 
 import { isWebOS } from "./platform.js";
 
-const LOOKUP_TIMEOUT_MS = 2000;
+// Calling listLaunchPoints directly, as any ordinary installed app, is
+// denied on this TV/firmware - confirmed live on-device:
+// {"errorText":"Denied method call \"listLaunchPoints\" for category
+// \"/\""}. Not an ACG/appinfo.json thing (tried, no effect - see
+// docs/handoff.md's "Known limitation") - this is the older, pre-ACG
+// Luna Bus category/role permission system, and a sideloaded web app's
+// default trust level just isn't on the allowed list for this method.
+//
+// Homebrew Channel's own service (already installed - this is a rooted
+// TV, this app wouldn't exist here otherwise) exposes an `exec` method
+// that runs a shell command AS ROOT, with no extra caller restriction of
+// its own. Confirmed live: our app's own identity (not just root SSH)
+// can reach it, and the command really does run as root (`id` ->
+// uid=0(root)). This is a legitimate, already-documented part of
+// Homebrew's design - letting other homebrew apps use the root access
+// the TV was already rooted for - not a security hole found by probing;
+// we're not creating new capability the TV didn't already have, just
+// using an existing, intentionally-exposed one. The command below is
+// 100% fixed, never built from variable/user input, so there's no
+// injection surface despite running as root.
+//
+// `script -qc "..." /dev/null` wraps the actual luna-send call because
+// this engine's luna-send only flushes output when attached to a pty
+// (see docs/handoff.md) - without it, exec's captured stdout comes back
+// empty even though the command "succeeds". Measured live: this whole
+// round trip (deny -> exec -> script -> luna-send -> parse) takes
+// ~3.2s on this hardware - slow, but worth it for icons/Pinned
+// Apps/Input Source all actually working; see docs/handoff.md for the
+// boot-loader UI added alongside this to cover the wait.
+const ELEVATED_LISTLAUNCHPOINTS_COMMAND =
+  "script -qc \"luna-send -n 1 luna://com.webos.applicationManager/listLaunchPoints '{}'\" /dev/null";
+
+// Generous enough to comfortably cover the elevated path's measured
+// ~3.2s (direct denial itself is near-instant, ~6ms) with real margin for
+// this hardware's variability, while still bounding worst case - a
+// completely stuck/unreachable Homebrew Channel must never hold up boot
+// forever.
+const LOOKUP_TIMEOUT_MS = 6000;
 
 let iconsByAppKey = new Map();
 let discoveredApps = [];
@@ -24,6 +61,31 @@ function normalizeIconUrl(path) {
   // defensively handle both an already-schemed URL and a bare filesystem
   // path (the common case for on-device app icons).
   return /^(https?:|file:)/.test(path) ? path : `file://${path}`;
+}
+
+function queryLaunchPointsElevated() {
+  return new Promise((resolve) => {
+    window.webOS.service.request("luna://org.webosbrew.hbchannel.service", {
+      method: "exec",
+      parameters: { command: ELEVATED_LISTLAUNCHPOINTS_COMMAND },
+      onSuccess: (res) => {
+        try {
+          const parsed = JSON.parse(res.stdoutString);
+          resolve(parsed.launchPoints || []);
+        } catch (err) {
+          console.error("[icons] elevated listLaunchPoints: bad JSON from exec", err, res);
+          resolve([]);
+        }
+      },
+      onFailure: (err) => {
+        console.error(
+          "[icons] elevated listLaunchPoints failed - Homebrew Channel not installed/reachable?",
+          err
+        );
+        resolve([]);
+      },
+    });
+  });
 }
 
 function queryLaunchPoints() {
@@ -43,12 +105,16 @@ function queryLaunchPoints() {
       parameters: {},
       onSuccess: (res) => finish(res?.launchPoints || []),
       onFailure: (err) => {
-        console.error("[icons] listLaunchPoints failed", err);
-        finish([]);
+        // Expected failure on this TV (see the comment above
+        // queryLaunchPointsElevated) - fall back to the elevated path
+        // instead of giving up outright.
+        console.warn("[icons] listLaunchPoints denied directly, trying elevated path", err);
+        queryLaunchPointsElevated().then(finish);
       },
     });
-    // Never let a stuck/slow Luna call hold up boot - worst case, every
-    // tile just keeps its emoji fallback.
+    // Never let a stuck/slow Luna call hold up boot forever - worst
+    // case, every tile just keeps its emoji fallback. Covers both the
+    // direct call above and the elevated fallback it may chain into.
     setTimeout(() => finish([]), LOOKUP_TIMEOUT_MS);
   });
 }

@@ -34,7 +34,7 @@
 }
 
 .settings-drawer__title {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 700;
 }
 
@@ -50,7 +50,7 @@
 }
 
 .settings-section__label {
-  font-size: 15px;
+  font-size: 17px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--fg-muted);
@@ -67,7 +67,7 @@
   margin: 6px;
   padding: 12px 18px;
   border-radius: var(--radius-sm);
-  font-size: var(--fs-body-sm);
+  font-size: 23px;
   background: var(--bg-elevated);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -87,6 +87,7 @@
   justify-content: space-between;
   padding: 14px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 24px;
 }
 
 .settings-toggle {
@@ -133,6 +134,7 @@
   padding: 10px 14px;
   border-radius: var(--radius-sm);
   background: var(--bg-elevated);
+  font-size: 24px;
 }
 
 .settings-pinned-item__label {
@@ -160,7 +162,7 @@
 }
 
 .settings-field__label {
-  font-size: 14px;
+  font-size: 16px;
   color: var(--fg-muted);
 }
 
@@ -172,7 +174,7 @@
   background: var(--bg-elevated);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--fg);
-  font-size: var(--fs-body-sm);
+  font-size: 22px;
   font-family: inherit;
 }
 
@@ -207,13 +209,13 @@
 }
 
 .settings-group__title {
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 600;
 }
 
 .settings-group__chevron {
   color: var(--fg-muted);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .settings-group__body {
@@ -264,7 +266,7 @@
 .settings-context-pill {
   padding: 6px 12px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);

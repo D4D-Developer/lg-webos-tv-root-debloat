@@ -17,7 +17,7 @@ export function minimalDockLayout(pinnedApps) {
   const dock = h(
     "div",
     { class: "minimal-dock__dock glass-panel" },
-    pinnedApps.map((app) => appTile(app, { showLabel: false }))
+    pinnedApps.map((app) => appTile(app))
   );
 
   // Wrapping the clock/weather in its own flex:1 container lets it center

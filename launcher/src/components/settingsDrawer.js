@@ -1,8 +1,8 @@
-import { h, clear } from "../core/dom.js";
+import { h, clear, replaceEl } from "../core/dom.js";
 import { getSettings, updateSettings, CITY_PRESETS } from "../core/settings.js";
-import { getPinnableApps } from "../data/apps.js";
+import { getPinnableApps, getStaticKeyForAppId } from "../data/apps.js";
 import { shiftPixelsOnce } from "../core/oled.js";
-import { setScope, releaseScope } from "../core/navigation.js";
+import { setScope, releaseScope, getFocusIndexWithin, focusIndexWithin } from "../core/navigation.js";
 import { getCategories, DEFAULT_CATEGORY } from "../core/wallpapers.js";
 import { glyphIcon } from "./iconGlyph.js";
 
@@ -123,6 +123,17 @@ export function createSettingsDrawer({ onChange }) {
   }
 
   function render() {
+    // Every control below updates settings then calls this same render()
+    // again, which tears down and rebuilds the whole drawer body from
+    // scratch rather than patching just what changed - that destroyed
+    // whatever element navigation.js had focused, so the very next D-pad
+    // press couldn't find it anymore and fell back to focusing the first
+    // element in the drawer ("selection jumps to the top after selecting
+    // anything"). Capturing/restoring by position here, once, covers
+    // every control uniformly without needing each individual onclick to
+    // know about it. See navigation.js's getFocusIndexWithin for why
+    // index-based position (not an identity/key match) is safe here.
+    const focusIndex = getFocusIndexWithin(body);
     clear(body);
     const settings = getSettings();
 
@@ -191,14 +202,24 @@ export function createSettingsDrawer({ onChange }) {
       "div",
       { class: "settings-pinned-list" },
       pinnableApps.map((app) => {
-        const isPinned = settings.pinnedApps.includes(app.key);
+        // `app.key` is the discovered app's real webOS id once live
+        // discovery works - a pin stored before that (under this
+        // catalog's own arbitrary key, e.g. "youtube") needs the same
+        // old-key<->real-id bridge on both the read (isPinned) and write
+        // (the toggle's onclick below) side, or toggling "off" here
+        // would filter the real id while the actually-stored old key
+        // silently stays pinned (reappearing via getPinnedApps' own
+        // matching bridge) - see that function's comment in data/apps.js.
+        const staticKey = getStaticKeyForAppId(app.key);
+        const isPinned =
+          settings.pinnedApps.includes(app.key) || (staticKey && settings.pinnedApps.includes(staticKey));
         const toggle = h("div", { class: `settings-toggle${isPinned ? " is-on" : ""}` });
         const icon = app.iconUrl
           ? h("img", {
               class: "settings-pinned-glyph",
               src: app.iconUrl,
               alt: app.label,
-              onerror: (e) => e.target.replaceWith(glyphIcon(app.glyph, { class: "settings-pinned-glyph" })),
+              onerror: (e) => replaceEl(e.target, glyphIcon(app.glyph, { class: "settings-pinned-glyph" })),
             })
           : glyphIcon(app.glyph, { class: "settings-pinned-glyph" });
         return h(
@@ -208,7 +229,7 @@ export function createSettingsDrawer({ onChange }) {
             "data-focusable": "true",
             onclick: () => {
               const next = isPinned
-                ? settings.pinnedApps.filter((k) => k !== app.key)
+                ? settings.pinnedApps.filter((k) => k !== app.key && k !== staticKey)
                 : [...settings.pinnedApps, app.key];
               updateSettings({ pinnedApps: next });
               onChange(getSettings());
@@ -388,6 +409,10 @@ export function createSettingsDrawer({ onChange }) {
       group("hero", "Hero Content", [heroToggleRow, heroFields].filter(Boolean))
     );
     body.appendChild(group("display-care", "Display Care", [oledRow, oledShiftNow]));
+
+    // -1 on the very first render (nothing was focused inside `body` yet -
+    // open() positions initial focus itself, right after this returns).
+    focusIndexWithin(body, focusIndex);
   }
 
   function open() {

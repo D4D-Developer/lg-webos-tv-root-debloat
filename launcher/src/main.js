@@ -1,3 +1,4 @@
+import "./core/webosBridge.js";
 import { h, clear } from "./core/dom.js";
 import { getSettings, onSettingsChange } from "./core/settings.js";
 import { initNavigation, focusFirst } from "./core/navigation.js";
@@ -7,7 +8,6 @@ import { startAutoPixelShift, createOledSleep } from "./core/oled.js";
 import { resolveWebOSIcons } from "./core/icons.js";
 import { APPS, getPinnedApps } from "./data/apps.js";
 import { createStatusBar } from "./components/statusbar.js";
-import { createInputSwitcher } from "./components/inputSwitcher.js";
 import { createWallpaperStack } from "./components/wallpaperStack.js";
 import { createWeatherEffects } from "./components/weatherEffects.js";
 import { appleTvLayout } from "./components/appleTvLayout.js";
@@ -94,27 +94,13 @@ function exitSleep() {
   oledSleep.exit();
 }
 
-// Header dropdown, not a Settings entry - closes Settings first if it's
-// open, since both share navigation.js's single focus-scope and only one
-// should own it at a time. (References settingsDrawer before it's defined
-// below - fine, same forward-reference-via-closure pattern already used
-// for onOledSleep/onRefreshTelemetry: this only runs once the user clicks,
-// long after the whole module has finished evaluating.)
-const inputSwitcher = createInputSwitcher({
-  onBeforeOpen: () => settingsDrawer.close(),
-});
-
 const statusBar = createStatusBar({
   onOledSleep: enterSleep,
-  onOpenSettings: () => {
-    inputSwitcher.close();
-    settingsDrawer.open();
-  },
+  onOpenSettings: () => settingsDrawer.open(),
   // Optional chaining: `telemetry` isn't assigned until boot()'s icon
   // lookup resolves, so this guards the (brief, rare) window where the UI
   // is already interactive but that hasn't finished yet.
   onRefreshTelemetry: () => telemetry?.refreshNow(),
-  inputSwitcherEl: inputSwitcher.el,
 });
 
 const settingsDrawer = createSettingsDrawer({
@@ -166,14 +152,12 @@ window.addEventListener("tv:toggle-settings", () => {
   if (settingsDrawer.isOpen()) {
     settingsDrawer.close();
   } else {
-    inputSwitcher.close();
     settingsDrawer.open();
   }
 });
 
 window.addEventListener("tv:back", () => {
-  if (inputSwitcher.isOpen()) inputSwitcher.close();
-  else if (settingsDrawer.isOpen()) settingsDrawer.close();
+  if (settingsDrawer.isOpen()) settingsDrawer.close();
 });
 
 let telemetry = null;
@@ -184,15 +168,28 @@ async function boot() {
   applyTheme(settings.theme);
 
   // Resolved before the first mountLayout() so tiles paint with the real
-  // icon from the start rather than needing a swap-in-place after. Resolves
-  // instantly (empty) off-device, and is bounded by icons.js's own timeout
-  // so a stuck Luna call can never hold up boot.
+  // icon from the start rather than needing a swap-in-place after.
+  // Resolves instantly (empty) off-device and on a TV where the direct
+  // Luna call succeeds; on this TV specifically it goes through
+  // icons.js's slower elevated fallback (~3.2s, measured - see that
+  // file's comments), which is why the boot loader below exists. Always
+  // bounded by icons.js's own timeout either way, so a stuck Luna call
+  // can never hold up boot forever.
   await resolveWebOSIcons(Object.values(APPS));
 
   mountLayout(settings.layout);
   applyOledAutoShift(settings);
   applyWallpaperMode(settings);
   applyWeatherEffects(settings);
+
+  // Dashboard is actually painted now - fade the boot loader out and drop
+  // it from the DOM once the transition finishes (matches the 400ms
+  // transition duration in base.css).
+  const bootLoader = document.getElementById("boot-loader");
+  if (bootLoader) {
+    bootLoader.classList.add("is-done");
+    setTimeout(() => bootLoader.remove(), 400);
+  }
 
   onSettingsChange(() => {
     // Settings can also change from outside the drawer's own render loop in

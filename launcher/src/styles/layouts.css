@@ -65,8 +65,18 @@
   /* Ambient Ken Burns drift - `.hero` clips overflow, and this animates
      ONLY `transform: scale()` (no translate/filter) to stay GPU-composited.
      transform-origin varies per slide (see demoContent.js) so the zoom
-     reads as a directional pan despite never translating. */
+     reads as a directional pan despite never translating. Paused by
+     default: every backdrop gets this animation, but only one is ever
+     visible (`.hero__backdrop.is-active`) - confirmed live on-device that
+     all 3 were `animationPlayState: "running"` simultaneously, same
+     always-on-regardless-of-visibility waste as the weather effects
+     above, just smaller (3 elements vs. 42+). */
   animation: hero-ken-burns 22s ease-in-out infinite alternate;
+  animation-play-state: paused;
+}
+
+.hero__backdrop.is-active .hero__backdrop-art {
+  animation-play-state: running;
 }
 
 @keyframes hero-ken-burns {
@@ -97,7 +107,7 @@
   right: 0;
   bottom: 0;
   left: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.82) 100%);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.5) 100%);
 }
 
 .hero__content {
@@ -222,6 +232,18 @@
   margin-left: 22px;
 }
 
+/* Icon sizes for this layout's 280x158 tile - see the fixed-px note above
+   .app-tile__icon-img for why these are px, not %. */
+.app-row .app-tile__icon-img {
+  width: 134px;
+  height: 76px;
+}
+
+.app-row .app-tile__icon-glyph {
+  width: 95px;
+  height: 63px;
+}
+
 .app-tile {
   flex: 0 0 auto;
   width: 280px;
@@ -238,6 +260,12 @@
      white overlays so it reads consistently across all 4 dark themes
      without per-theme overrides. */
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 10px 24px rgba(0, 0, 0, 0.35);
+  /* More translucent than .glass-panel's own default tint (this rule
+     wins over both of that rule's branches via source order - same
+     specificity, this file loads after glass.css) - same "let the
+     dashboard wallpaper show through" treatment already applied to
+     .bento__hero-backdrop. */
+  background: rgba(18, 20, 26, 0.45);
 }
 
 .app-tile::before {
@@ -257,35 +285,46 @@
   transform: scale(var(--focus-scale-hero)) translateY(-6px);
 }
 
-/* Real webOS app icon (core/icons.js); sized proportionally so it works
-   across this tile's very different sizes in each layout (280x158 Apple TV,
-   220x220 Bento, 84x84 Minimal Dock) without per-layout overrides. */
+/* Real webOS app icon (core/icons.js). Sized with fixed px per layout
+   below, NOT percentages of the tile - found live on-device (DevTools
+   inspection on the real TV, not assumed) that this engine does not
+   correctly resolve percentage HEIGHT on these nested flex items: width
+   resolved fine (~51px of a 112px tile for 52%) but height came back
+   nearly the tile's full height (108px) instead of the expected ~58px,
+   for every layout, not just one. Confirmed a fixed px height resolves
+   correctly instead. These base rules are a harmless fallback (correct in
+   any modern browser, e.g. local dev) for whichever property a
+   layout-scoped rule below doesn't set. */
 .app-tile__icon-img {
-  width: 48%;
-  height: 48%;
   object-fit: contain;
 }
 
 .app-tile__icon-glyph {
-  width: 40%;
-  height: 40%;
   position: relative; /* stays above the ::before gloss overlay */
 }
 
+/* Overlaid on the tile's own bottom edge (not pushed below it) so it never
+   needs extra vertical room in any layout's grid/row spacing - was
+   previously only revealed on focus, which worked when real webOS icons
+   were expected to resolve per-app; on this TV icon discovery is
+   permanently blocked (see docs/handoff.md's "Known limitation") so every
+   unfocused tile fell back to one of a handful of generic glyphs with no
+   other way to tell them apart. Always visible now. */
 .app-tile__label {
   position: absolute;
-  bottom: -32px;
   left: 0;
   right: 0;
+  bottom: 0;
+  padding: 8px 10px 9px;
   text-align: center;
+  color: #fff;
   font-size: var(--fs-body-sm);
   font-weight: 600;
-  opacity: 0;
-  transition: opacity var(--dur-focus) var(--ease-spring);
-}
-
-.app-tile.is-focused .app-tile__label {
-  opacity: 1;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.68) 60%, rgba(0, 0, 0, 0.8) 100%);
+  border-radius: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ---------- Layout 2: Ambient Bento ---------- */
@@ -315,10 +354,30 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  background-size: cover;
-  background-position: center;
   position: relative;
   overflow: hidden;
+  /* Same more-translucent treatment as .app-tile above and
+     .bento__hero-backdrop below - this panel's own glass-panel tint was
+     still at the default 0.88 (opaque-looking), on top of the backdrop
+     layer's own 0.45, which kept the wallpaper from showing through as
+     much as intended. */
+  background: rgba(18, 20, 26, 0.45);
+}
+
+/* Reduced opacity so the dashboard wallpaper behind it shows through,
+   layered above .bento__hero's own glass-panel tint/blur (z-index:-1
+   relative to .bento__hero's stacking context, not the whole page) and
+   below its text content. */
+.bento__hero-backdrop {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.45;
+  z-index: -1;
 }
 
 .bento__hero > * + * {
@@ -362,6 +421,16 @@
   height: 220px;
   font-size: 36px;
   margin: 9px;
+}
+
+.bento__grid .app-tile__icon-img {
+  width: 106px;
+  height: 106px;
+}
+
+.bento__grid .app-tile__icon-glyph {
+  width: 88px;
+  height: 88px;
 }
 
 .bento__insight {
@@ -421,17 +490,42 @@
 
 .minimal-dock__dock {
   display: flex;
-  padding: 18px 24px;
+  padding: 22px 28px;
   border-radius: 999px;
+  /* Same translucent treatment as .app-tile/.bento__hero - this dock
+     pill is itself .glass-panel (still the default 0.88 opacity) and
+     wraps the tiles, so even with .app-tile's own background already at
+     0.45, the two dark semi-transparent layers were compounding into
+     something that read as fully opaque - confirmed live
+     (dock: rgba(18,20,26,0.88), tile: rgba(18,20,26,0.45) stacked). */
+  background: rgba(18, 20, 26, 0.45);
 }
 
 .minimal-dock__dock > * + * {
-  margin-left: 20px;
+  margin-left: 22px;
 }
 
 .minimal-dock__dock .app-tile {
-  width: 84px;
-  height: 84px;
-  border-radius: 20px;
+  width: 112px;
+  height: 112px;
+  border-radius: 24px;
   font-size: 32px;
+}
+
+/* Fixed px (see the note above .app-tile__icon-img for why, not %) -
+   confirmed live on-device that 52%/52% here rendered as ~51x108px on a
+   112px tile (width roughly right, height wildly wrong) instead of the
+   intended ~58x58px. Sized a bit larger than the general
+   width/height-of-tile ratio elsewhere on top of that, since this dock is
+   the primary way apps get launched day-to-day and was hard to read at
+   the smaller size. */
+.minimal-dock__dock .app-tile__icon-img,
+.minimal-dock__dock .app-tile__icon-glyph {
+  width: 62px;
+  height: 62px;
+}
+
+.minimal-dock__dock .app-tile .app-tile__label {
+  padding: 6px 6px 7px;
+  font-size: 14px;
 }

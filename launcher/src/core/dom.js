@@ -26,3 +26,17 @@ export function h(tag, props = {}, children = []) {
 export function clear(el) {
   while (el.firstChild) el.removeChild(el.firstChild);
 }
+
+// `Element.prototype.replaceWith` (the obvious one-liner here) is a
+// ChildNode-mixin method that landed in Chrome 54 - one version AFTER
+// this TV's real engine (confirmed live: `document.createElement("img")
+// .replaceWith` is undefined there, while the older `.remove()` exists
+// fine). Broken-icon-image fallback swaps using `.replaceWith()` were
+// silently throwing on-device and never actually swapping anything,
+// leaving the broken `<img>` (and its alt text, duplicating the tile's
+// own label) on screen instead of the intended glyph fallback -
+// confirmed live via DevTools, not assumed. `parentNode.replaceChild`
+// is universally supported (core DOM Level 1) and does the same thing.
+export function replaceEl(oldEl, newEl) {
+  oldEl.parentNode?.replaceChild(newEl, oldEl);
+}

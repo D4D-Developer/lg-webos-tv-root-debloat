@@ -16,6 +16,14 @@
   </head>
   <body>
     <div id="app" class="safe-zone"></div>
+    <!-- Static HTML, not JS-created, so it's visible immediately on load
+         with zero flash of blank/unstyled content - covers the real boot
+         delay while app discovery resolves (see core/icons.js's elevated
+         listLaunchPoints path). main.js removes this once the dashboard
+         has actually mounted. -->
+    <div id="boot-loader" class="boot-loader">
+      <div class="boot-loader__spinner"></div>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

@@ -1,4 +1,4 @@
-import { h } from "../core/dom.js";
+import { h, replaceEl } from "../core/dom.js";
 import { launchApp } from "../core/platform.js";
 import { glyphIcon } from "./iconGlyph.js";
 
@@ -17,7 +17,7 @@ function tileIcon(app) {
     class: "app-tile__icon-img",
     src: app.iconUrl,
     alt: app.label,
-    onerror: (e) => e.target.replaceWith(glyphFallback(app)),
+    onerror: (e) => replaceEl(e.target, glyphFallback(app)),
   });
 }
 

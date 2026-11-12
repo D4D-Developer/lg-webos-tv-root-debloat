@@ -26,7 +26,7 @@ function formatDate(date) {
   });
 }
 
-export function createStatusBar({ onOledSleep, onOpenSettings, onRefreshTelemetry, inputSwitcherEl }) {
+export function createStatusBar({ onOledSleep, onOpenSettings, onRefreshTelemetry }) {
   const greetingEl = h("span", { class: "statusbar__greeting" }, greeting());
   // User-facing label is just "Sleep" - a glanceable status-bar button is
   // the wrong place for the "OLED" qualifier (unlike "OLED Pixel-Shift" in
@@ -83,7 +83,7 @@ export function createStatusBar({ onOledSleep, onOpenSettings, onRefreshTelemetr
   );
 
   const el = h("div", { class: "statusbar" }, [
-    h("div", { class: "statusbar__left" }, [greetingEl, inputSwitcherEl, clockPill]),
+    h("div", { class: "statusbar__left" }, [greetingEl, clockPill]),
     h("div", { class: "statusbar__right" }, [telemetryPill, oledSleepBtn, settingsBtn]),
   ]);
 

@@ -99,6 +99,45 @@ img {
   display: block;
 }
 
+.boot-loader {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  z-index: 999;
+  transition: opacity 400ms ease;
+}
+
+.boot-loader.is-done {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* transform-only (rotation), consistent with every other animation in
+   this app - cheap to composite on the TV's weak GPU. */
+.boot-loader__spinner {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.15);
+  border-top-color: var(--accent);
+  animation: boot-spin 900ms linear infinite;
+}
+
+@keyframes boot-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Universal focus treatment for spatially-navigable elements. Mouse hover
    gets the same ring via navigation.js adding .is-focused on pointerenter,
    so remote and mouse stay visually in sync per spec. */

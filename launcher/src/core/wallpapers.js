@@ -64,8 +64,25 @@ const CONTEXT_SETTINGS_KEY = {
 export function getAllWallpapers(context = "dashboard") {
   const key = CONTEXT_SETTINGS_KEY[context] || CONTEXT_SETTINGS_KEY.dashboard;
   const enabled = getSettings()[key];
-  if (!enabled) return ALL_WALLPAPERS;
-  return ALL_WALLPAPERS.filter((w) => enabled.includes(w.category));
+  if (enabled) return ALL_WALLPAPERS.filter((w) => enabled.includes(w.category));
+  // "everything enabled" (the default, `enabled` is null) excludes the
+  // built-in generated gradients from the dashboard specifically, once
+  // any real custom wallpapers exist - they're dark enough to read as
+  // "no wallpaper at all" against this app's already-dark theme, which
+  // is what was being reported as the dashboard background
+  // intermittently looking blank (~8% chance per pick: 5 of 63 pool
+  // entries were gradients). Still reachable by explicitly re-enabling
+  // "Default (generated) -> Dashboard" in Settings (an explicit array
+  // that includes DEFAULT_CATEGORY, handled by the branch above), and
+  // still the real fallback for a library with zero custom wallpapers -
+  // the `customWallpapers.length > 0` check means a fresh install with
+  // nothing in src/assets/wallpapers/ yet still gets the gradients, not
+  // a blank dashboard. Screensaver's own "everything" default is
+  // unchanged - only the dashboard was reported as having this problem.
+  if (context === "dashboard" && customWallpapers.length > 0) {
+    return ALL_WALLPAPERS.filter((w) => w.category !== DEFAULT_CATEGORY);
+  }
+  return ALL_WALLPAPERS;
 }
 
 export function pickRandom(exclude, context = "dashboard") {

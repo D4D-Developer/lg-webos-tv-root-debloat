@@ -13,7 +13,7 @@
   --radius-md: 18px;
   --radius-sm: 12px;
 
-  --glass-blur: 18px;
+  --glass-blur: 8px;
   --glass-border: 1px solid rgba(255, 255, 255, 0.11);
 
   --focus-scale-in: 1.04;

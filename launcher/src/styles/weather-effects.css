@@ -44,9 +44,45 @@
   opacity: 1; /* the keyframe animation itself does the actual flashing */
 }
 
+/* Each drop/flake/fog/lightning layer's `animation: ... infinite`
+   (defined further below, next to each @keyframes) runs regardless of
+   opacity - CSS animations don't pause themselves just because they're
+   invisible, so with weather effects on but the condition "clear" (the
+   common case), this was 24 rain drops + 18 snowflakes + fog + lightning
+   all continuously animating, all the time, for zero visual result.
+   Confirmed live on-device (`animationPlayState: "running"` for all of
+   them even at `data-condition="clear"`). On this TV's weak/old GPU
+   that's real, constant compositor work competing with everything else -
+   including rendering the focus-move transition promptly - and was a
+   real contributor to remote navigation feeling sluggish. The actual
+   `animation-play-state: paused` default lives on each element's own
+   `animation`-shorthand rule below, not here - the shorthand resets its
+   own play-state sub-property to "running" wherever it's declared, so a
+   separate same-specificity rule earlier in the file was silently losing
+   that fight. These `running` overrides (higher specificity: an
+   attribute selector plus a class) still correctly win over either. */
+.weather-fx[data-condition="rain"] .weather-fx__drop,
+.weather-fx[data-condition="storm"] .weather-fx__drop {
+  animation-play-state: running;
+}
+
+.weather-fx[data-condition="snow"] .weather-fx__flake {
+  animation-play-state: running;
+}
+
+.weather-fx[data-condition="fog"] .weather-fx__fog,
+.weather-fx[data-condition="storm"] .weather-fx__fog {
+  animation-play-state: running;
+}
+
+.weather-fx[data-condition="storm"] .weather-fx__lightning {
+  animation-play-state: running;
+}
+
 .weather-fx__fog {
   background: linear-gradient(100deg, rgba(255, 255, 255, 0) 10%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 90%);
   animation: weather-fog-drift 20s ease-in-out infinite alternate;
+  animation-play-state: paused;
 }
 
 @keyframes weather-fog-drift {
@@ -65,6 +101,7 @@
   height: 70px;
   background: linear-gradient(180deg, rgba(190, 210, 255, 0) 0%, rgba(190, 210, 255, 0.7) 100%);
   animation: weather-rain-fall linear infinite;
+  animation-play-state: paused;
 }
 
 @keyframes weather-rain-fall {
@@ -82,6 +119,7 @@
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.85);
   animation: weather-snow-fall linear infinite;
+  animation-play-state: paused;
 }
 
 @keyframes weather-snow-fall {
@@ -99,6 +137,7 @@
 .weather-fx__lightning {
   background: #fff;
   animation: weather-lightning-flash 7s linear infinite;
+  animation-play-state: paused;
 }
 
 @keyframes weather-lightning-flash {

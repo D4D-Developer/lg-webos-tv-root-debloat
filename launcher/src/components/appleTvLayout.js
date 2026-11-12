@@ -2,7 +2,12 @@ import { h, clear } from "../core/dom.js";
 import { appRow } from "./appTile.js";
 import { HERO_SLIDES as DEMO_SLIDES } from "../data/demoContent.js";
 
-const HERO_ROTATE_MS = 9000;
+// Was 9000ms - with only 3 demo slides by default (useRealHeroContent is
+// off until you add a Plex/TMDB source), the whole hero area was cycling
+// completely every 27s, forever, with no user input - reported as
+// constant screen "flicker" once actually watched on the TV for a while.
+// A slow ambient background element doesn't need to change this often.
+const HERO_ROTATE_MS = 25000;
 const CONTENT_SWAP_MS = 280; // shorter than the backdrop's own crossfade
 
 // Soft blurred color blobs behind a *generated* (non-real) slide's base
