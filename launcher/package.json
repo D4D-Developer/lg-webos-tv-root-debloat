@@ -1,0 +1,17 @@
+{
+  "name": "lg-tv-launcher",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Custom 10-foot homepage dashboard for LG webOS 4.x TVs. Dev server for local testing before TV deployment.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --host"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-legacy": "^8.2.4",
+    "vite": "^8.3.8",
+    "terser": "^5.36.0"
+  }
+}

@@ -1,7 +1,9 @@
-# Phase 3 — UI/UX (parked)
+# Phase 3 — UI/UX
 
-Not started. Phase 2 (debloat) was judged "enough for now" — revisit this when there's
-appetite for a real project, not a quick tweak.
+**Status: in progress** (started 2026-11-12) — see [docs/progress.md](progress.md) for
+current status and [docs/handoff.md](handoff.md) for the active work thread. What
+follows below is the original scoping/research that preceded it; option 1 is the one
+being built, in [launcher/](../launcher/).
 
 ## Options considered
 

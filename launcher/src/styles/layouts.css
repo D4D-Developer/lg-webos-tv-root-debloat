@@ -1,0 +1,437 @@
+.layout-root {
+  height: calc(1080px - var(--safe-margin) * 2 - 72px - 28px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Spacing uses `> * + *` margin, not flex `gap` - flex `gap` postdates the
+   Chromium build real webOS 4.x hardware ships (gap: Chrome 84, TV: ~53) and
+   would silently collapse to zero spacing there. Margin-on-sibling works
+   everywhere. */
+
+/* ---------- Layout 1: Apple TV (default) ---------- */
+/* Flexbox throughout (not CSS Grid) - full Grid support also landed after
+   that Chromium build. */
+
+/* Compound selector (no space) - data-layout and .layout-root are on the
+   SAME element, not ancestor/descendant. */
+.layout-root[data-layout="apple-tv"] > * + * {
+  margin-top: 24px;
+}
+
+.hero {
+  flex: 0 0 63%;
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden; /* clips the Ken Burns layer's scale-up */
+  display: flex;
+  align-items: flex-end;
+  padding: 44px;
+}
+
+.hero__backdrop-stack {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+/* Cross-fades via opacity only - the actual slide switch underneath
+   (paintContent) is deferred until this finishes most of its fade, so text
+   never hard-cuts against a still-fading backdrop. */
+.hero__backdrop {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  opacity: 0;
+  transition: opacity 1100ms ease;
+}
+
+.hero__backdrop.is-active {
+  opacity: 1;
+}
+
+.hero__backdrop-art {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-size: cover;
+  background-position: center;
+  /* Ambient Ken Burns drift - `.hero` clips overflow, and this animates
+     ONLY `transform: scale()` (no translate/filter) to stay GPU-composited.
+     transform-origin varies per slide (see demoContent.js) so the zoom
+     reads as a directional pan despite never translating. */
+  animation: hero-ken-burns 22s ease-in-out infinite alternate;
+}
+
+@keyframes hero-ken-burns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.09);
+  }
+}
+
+.hero__atmosphere {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Blends the blurred glow circles with the base gradient beneath them
+     rather than sitting as a flat layer on top. */
+  mix-blend-mode: screen;
+}
+
+.hero__scrim {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.82) 100%);
+}
+
+.hero__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 1000px;
+  transition: opacity 240ms ease;
+}
+
+.hero__content.is-transitioning {
+  opacity: 0;
+}
+
+.hero__content > * + * {
+  margin-top: 14px;
+}
+
+.hero__meta {
+  display: flex;
+}
+
+.hero__meta > * + * {
+  margin-left: 10px;
+}
+
+.hero__badge {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.hero__actions {
+  display: flex;
+  margin-top: 6px;
+}
+
+.hero__actions > * + * {
+  margin-left: 16px;
+}
+
+.hero__cta {
+  display: flex;
+  align-items: center;
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 700;
+  font-size: var(--fs-body);
+}
+
+.hero__cta > * + * {
+  margin-left: 10px;
+}
+
+.hero__cta.is-focused,
+.hero__cta:hover {
+  transform: scale(var(--focus-scale-in));
+}
+
+.hero__next-up {
+  display: flex;
+  align-items: center;
+  padding: 14px 24px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.hero__next-up > * + * {
+  margin-left: 10px;
+}
+
+.hero__dots {
+  position: absolute;
+  bottom: 44px;
+  right: 44px;
+  z-index: 1;
+  display: flex;
+}
+
+.hero__dots > * + * {
+  margin-left: 8px;
+}
+
+.hero__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.hero__dot.is-active {
+  background: var(--fg);
+  width: 22px;
+  border-radius: 5px;
+}
+
+.app-row {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  /* 8 tiles at 280px don't fit the 1808px safe-zone width - scrolls
+     instead of clipping, kept in view via navigation.js's scrollIntoView
+     on focus (true Top Shelf behavior, not just "whatever fits"). */
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none; /* Firefox */
+}
+
+.app-row::-webkit-scrollbar {
+  display: none;
+}
+
+.app-row > * + * {
+  margin-left: 22px;
+}
+
+.app-tile {
+  flex: 0 0 auto;
+  width: 280px;
+  height: 158px; /* 16:9 - fixed px, not `aspect-ratio` (Chrome 88+ only) */
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+  position: relative;
+  /* Glossy resting-state treatment: a top highlight (::before, below) plus
+     a crisp inner top edge-light and a soft lift shadow - on top of the
+     diagonal focus-sweep .glass-panel::after already provides. Uses plain
+     white overlays so it reads consistently across all 4 dark themes
+     without per-theme overrides. */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.app-tile::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 55%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 100%);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.app-tile.is-focused,
+.app-tile:hover {
+  transform: scale(var(--focus-scale-hero)) translateY(-6px);
+}
+
+/* Real webOS app icon (core/icons.js); sized proportionally so it works
+   across this tile's very different sizes in each layout (280x158 Apple TV,
+   220x220 Bento, 84x84 Minimal Dock) without per-layout overrides. */
+.app-tile__icon-img {
+  width: 48%;
+  height: 48%;
+  object-fit: contain;
+}
+
+.app-tile__icon-glyph {
+  width: 40%;
+  height: 40%;
+  position: relative; /* stays above the ::before gloss overlay */
+}
+
+.app-tile__label {
+  position: absolute;
+  bottom: -32px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: var(--fs-body-sm);
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity var(--dur-focus) var(--ease-spring);
+}
+
+.app-tile.is-focused .app-tile__label {
+  opacity: 1;
+}
+
+/* ---------- Layout 2: Ambient Bento ---------- */
+
+.layout-root[data-layout="bento"] {
+  flex-direction: row;
+}
+
+.layout-root[data-layout="bento"] > * + * {
+  margin-left: 24px;
+}
+
+.bento__left {
+  flex: 0 0 41.666%; /* 5 of 12 cols */
+  display: flex;
+  flex-direction: column;
+}
+
+.bento__left > * + * {
+  margin-top: 20px;
+}
+
+.bento__hero {
+  flex: 1;
+  border-radius: var(--radius-lg);
+  padding: 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.bento__hero > * + * {
+  margin-top: 10px;
+}
+
+.bento__spotify {
+  height: 150px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+}
+
+.bento__spotify > * + * {
+  margin-left: 18px;
+}
+
+.bento__right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.bento__right > * + * {
+  margin-top: 20px;
+}
+
+.bento__grid {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  /* negative margin + per-tile margin below stands in for flex-wrap gap,
+     which also postdates the TV's engine. */
+  margin: -9px;
+}
+
+.bento__grid .app-tile {
+  /* Sized with margin for a comfortable 4-per-row fit within bento__right's
+     ~1030px width, not a tight fit against the exact computed value. */
+  width: 220px;
+  height: 220px;
+  font-size: 36px;
+  margin: 9px;
+}
+
+.bento__insight {
+  height: 110px;
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+}
+
+.bento__insight > * + * {
+  margin-left: 28px;
+}
+
+/* ---------- Layout 3: Minimal Dock ---------- */
+
+.layout-root[data-layout="minimal-dock"] {
+  /* Horizontal centering only now - vertical placement is handled by
+     .minimal-dock__content (flex:1, centers itself above the dock) and the
+     dock being a normal last flex item, pinned to the bottom. */
+  align-items: center;
+}
+
+.layout-root[data-layout="minimal-dock"] > * + * {
+  margin-top: 48px;
+}
+
+.minimal-dock__content {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.minimal-dock__sanctuary {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.minimal-dock__sanctuary > * + * {
+  margin-top: 18px;
+}
+
+.minimal-dock__clock {
+  font-size: 160px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.minimal-dock__weather {
+  font-size: var(--fs-heading);
+  color: var(--fg-muted);
+}
+
+.minimal-dock__dock {
+  display: flex;
+  padding: 18px 24px;
+  border-radius: 999px;
+}
+
+.minimal-dock__dock > * + * {
+  margin-left: 20px;
+}
+
+.minimal-dock__dock .app-tile {
+  width: 84px;
+  height: 84px;
+  border-radius: 20px;
+  font-size: 32px;
+}

@@ -1,0 +1,281 @@
+.settings-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 220ms ease;
+  z-index: 10;
+}
+
+.settings-overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.settings-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 520px;
+  padding: 48px 40px;
+  border-radius: 0;
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 280ms var(--ease-spring);
+}
+
+.settings-overlay.is-open .settings-drawer {
+  transform: translateX(0);
+}
+
+.settings-drawer__title {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.settings-section {
+  margin-top: 36px;
+}
+
+/* Inside a collapsible group's body, the first section sits right under
+   the group header - it doesn't need the same 36px gap sections normally
+   get from whatever came before them. */
+.settings-group__body > .settings-section:first-child {
+  margin-top: 0;
+}
+
+.settings-section__label {
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-muted);
+  margin-bottom: 14px;
+}
+
+.settings-options {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -6px;
+}
+
+.settings-option {
+  margin: 6px;
+  padding: 12px 18px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-body-sm);
+  background: var(--bg-elevated);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.settings-option.is-active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.settings-option.is-focused {
+  transform: scale(var(--focus-scale-in));
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.settings-toggle {
+  width: 54px;
+  height: 30px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  position: relative;
+}
+
+.settings-toggle::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 180ms var(--ease-spring);
+}
+
+.settings-toggle.is-on {
+  background: var(--accent);
+}
+
+.settings-toggle.is-on::after {
+  left: 27px;
+}
+
+.settings-pinned-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-pinned-list > * + * {
+  margin-top: 8px;
+}
+
+.settings-pinned-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+}
+
+.settings-pinned-item__label {
+  display: flex;
+  align-items: center;
+}
+
+.settings-pinned-item__label > * + * {
+  margin-left: 10px;
+}
+
+.settings-pinned-glyph {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  object-fit: contain; /* only matters when this is the real-icon <img> */
+}
+
+.settings-fields {
+  margin-top: 14px;
+}
+
+.settings-fields > * + * {
+  margin-top: 8px;
+}
+
+.settings-field__label {
+  font-size: 14px;
+  color: var(--fg-muted);
+}
+
+.settings-input {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--fg);
+  font-size: var(--fs-body-sm);
+  font-family: inherit;
+}
+
+.settings-input::placeholder {
+  color: var(--fg-muted);
+}
+
+/* Collapsible top-level groups - the drawer's actual "cleanup": a short
+   list of headers instead of one long continuous scroll through every
+   control at once. */
+.settings-group {
+  margin-top: 16px;
+}
+
+.settings-group:first-child {
+  margin-top: 0;
+}
+
+.settings-group__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.settings-group__header.is-focused {
+  transform: scale(1.015);
+}
+
+.settings-group__title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.settings-group__chevron {
+  color: var(--fg-muted);
+  font-size: 13px;
+}
+
+.settings-group__body {
+  padding: 0 2px;
+  /* The actual fix for the header-to-content gap: most groups' first child
+     isn't a .settings-section at all (Weather/Pinned Apps/Wallpaper &
+     Screensaver/Hero Content/Display Care all pass plain rows/lists
+     directly), so the old approach of only zeroing
+     .settings-section:first-child's own margin never gave THEM any gap in
+     the first place - "Appearance" (the one group that does use nested
+     .settings-section labels) was the only one that even had the zeroed
+     rule to begin with, and zeroing it with nothing to replace it left
+     that one flush against its header too. One universal gap here, for
+     everything, fixes all of them at once. */
+  margin-top: 18px;
+}
+
+/* Per-category Dashboard/Screensaver pills - some images (e.g. with text
+   baked in) read fine full-screen as a screensaver but get covered/
+   illegible behind the dashboard's UI and scrim, or vice versa. */
+.settings-category-table {
+  display: flex;
+  flex-direction: column;
+  margin-top: 14px;
+}
+
+.settings-category-table > * + * {
+  margin-top: 8px;
+}
+
+.settings-category-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+}
+
+.settings-category-row__toggles {
+  display: flex;
+}
+
+.settings-category-row__toggles > * + * {
+  margin-left: 10px;
+}
+
+.settings-context-pill {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--fg-muted);
+}
+
+.settings-context-pill.is-active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.settings-context-pill.is-focused {
+  transform: scale(var(--focus-scale-in));
+}

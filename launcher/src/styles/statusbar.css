@@ -1,0 +1,170 @@
+.statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 72px;
+  margin-bottom: 28px;
+}
+
+.statusbar__left,
+.statusbar__right {
+  display: flex;
+  align-items: center;
+}
+
+.statusbar__left > * + *,
+.statusbar__right > * + * {
+  margin-left: 16px;
+}
+
+.statusbar__greeting {
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 20px;
+  font-size: var(--fs-body-sm);
+  white-space: nowrap;
+}
+
+.pill > * + * {
+  margin-left: 10px;
+}
+
+.pill--button {
+  border-radius: 999px;
+}
+
+.pill__icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+.pill--button:hover,
+.pill--button.is-focused {
+  transform: scale(var(--focus-scale-in));
+}
+
+.telemetry-pill {
+  border-radius: 999px;
+  cursor: pointer;
+  transition: opacity 400ms ease;
+}
+
+/* Showing a cached cold-boot reading rather than a confirmed-live one. */
+.telemetry-pill.is-stale {
+  opacity: 0.7;
+}
+
+.telemetry-pill__segment {
+  display: flex;
+  align-items: center;
+}
+
+.telemetry-pill__segment > * + * {
+  margin-left: 6px;
+}
+
+.telemetry-pill__divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.telemetry-pill.is-refreshing {
+  opacity: 0.6;
+}
+
+.clock-pill {
+  justify-content: space-between;
+  min-width: 190px;
+}
+
+.clock-pill__time {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.clock-pill__date {
+  font-size: 15px;
+  color: var(--fg-muted);
+}
+
+.icon-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn:hover,
+.icon-btn.is-focused {
+  transform: scale(var(--focus-scale-in));
+}
+
+.icon-btn__glyph {
+  width: 22px;
+  height: 22px;
+}
+
+/* Header input-source dropdown - anchored to its own toggle pill, not a
+   Settings entry, so switching is a one-step action. */
+.input-switcher {
+  position: relative;
+}
+
+.input-switcher__panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  width: 240px;
+  padding: 10px;
+  border-radius: var(--radius-md);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity 180ms ease, transform 180ms ease, visibility 180ms;
+  z-index: 10; /* same tier as the Settings drawer - mutual exclusion in
+                  main.js means only one of them is ever actually visible */
+}
+
+.input-switcher__panel.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.input-switcher__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-switcher__list > * + * {
+  margin-top: 6px;
+}
+
+.input-switcher__item {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  font-size: var(--fs-body-sm);
+  background: var(--bg-elevated);
+}
+
+.input-switcher__item.is-focused {
+  transform: scale(var(--focus-scale-in));
+}
+
+.input-switcher__empty {
+  padding: 10px 4px;
+  font-size: 14px;
+  color: var(--fg-muted);
+}

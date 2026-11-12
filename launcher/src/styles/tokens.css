@@ -1,0 +1,79 @@
+/* Design tokens: spacing, type scale, and the 4 switchable themes.
+   Theme is applied via [data-theme] on <html>; see core/settings.js. */
+
+:root {
+  /* 10-foot safe area + type scale, per spec */
+  --safe-margin: 56px;
+  --fs-body: 22px;
+  --fs-body-sm: 20px;
+  --fs-heading-lg: 74px;
+  --fs-heading: 52px;
+
+  --radius-lg: 28px;
+  --radius-md: 18px;
+  --radius-sm: 12px;
+
+  --glass-blur: 18px;
+  --glass-border: 1px solid rgba(255, 255, 255, 0.11);
+
+  --focus-scale-in: 1.04;
+  --focus-scale-hero: 1.08;
+  --ease-spring: cubic-bezier(0.2, 0.85, 0.25, 1);
+  --dur-focus: 190ms;
+
+  --pixel-shift-x: 0px;
+  --pixel-shift-y: 0px;
+}
+
+/* 1. Obsidian Glass (default) */
+:root,
+[data-theme="obsidian"] {
+  --bg: #0b0d12;
+  --bg-elevated: rgba(255, 255, 255, 0.06);
+  --fg: #f4f6f8;
+  --fg-muted: rgba(244, 246, 248, 0.64);
+  --accent: #38bdf8;
+  --accent-contrast: #04141c;
+  --focus-ring: #38bdf8;
+  --grayscale: 0;
+}
+
+/* 2. Warm Cinema */
+[data-theme="warm-cinema"] {
+  --bg: #120d0a;
+  --bg-elevated: rgba(255, 244, 230, 0.07);
+  --fg: #fbf3e9;
+  --fg-muted: rgba(251, 243, 233, 0.64);
+  --accent: #fbbf24;
+  --accent-contrast: #1c1304;
+  --focus-ring: #fbbf24;
+  --grayscale: 0;
+}
+
+/* 3. Monochrome B&W */
+[data-theme="monochrome"] {
+  --bg: #050505;
+  --bg-elevated: rgba(255, 255, 255, 0.08);
+  --fg: #ffffff;
+  --fg-muted: rgba(255, 255, 255, 0.6);
+  --accent: #ffffff;
+  --accent-contrast: #050505;
+  --focus-ring: #ffffff;
+  --grayscale: 1;
+}
+
+/* 4. Pure Void (true OLED black) */
+[data-theme="pure-void"] {
+  --bg: #000000;
+  --bg-elevated: rgba(255, 255, 255, 0.05);
+  --fg: #f1f1f6;
+  --fg-muted: rgba(241, 241, 246, 0.6);
+  --accent: #818cf8;
+  --accent-contrast: #0b0a1c;
+  --focus-ring: #818cf8;
+  --grayscale: 0;
+}
+
+html[data-theme="monochrome"] {
+  filter: grayscale(1);
+}

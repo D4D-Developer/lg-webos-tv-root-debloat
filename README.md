@@ -20,8 +20,10 @@ model line — not specific to any one unit.
 2. **[Debloat](docs/02-debloat.md)** — hide ad/telemetry/demo/SDK system apps from the
    launcher (reversible, nothing uninstalled), disable promo/content-recommendation
    settings, block OTA update hosts, persist across reboots via a boot hook.
-3. **[UI/UX notes (parked)](docs/03-ui-ux-notes.md)** — scoping notes on a custom
-   launcher, not yet started.
+3. **[Custom launcher](launcher/)** — a 10-foot homepage dashboard web app (4 themes,
+   3 switchable layouts, live weather/AQI status pill, D-pad navigation, Settings
+   drawer). In progress — see [docs/03-ui-ux-notes.md](docs/03-ui-ux-notes.md) for the
+   original scoping/research and [docs/progress.md](docs/progress.md) for current status.
 
 ## Credits (all the real work is upstream)
 

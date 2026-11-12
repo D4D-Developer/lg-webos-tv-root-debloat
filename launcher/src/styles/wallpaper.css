@@ -1,0 +1,48 @@
+.wallpaper-stack {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  /* Negative z-index, not just position:absolute - within #app's stacking
+     context, in-flow static content (status bar, layouts) paints BEFORE
+     positioned descendants at z-index:auto/0 regardless of DOM order, so a
+     plain absolute layer would sit on TOP of everything else. Negative
+     z-index is what actually pins it to the back. */
+  z-index: -1;
+  overflow: hidden;
+}
+
+.wallpaper-layer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  opacity: 0;
+  transition: opacity 1400ms ease;
+}
+
+.wallpaper-layer.is-active {
+  opacity: 1;
+}
+
+/* Dashboard use: a legibility scrim regardless of the photo's own
+   brightness/contrast, same idea as the hero's scrim. */
+.wallpaper-stack:not(.wallpaper-stack--dimmed)::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+/* Screensaver use: dimmed for OLED safety - this is the specificity
+   override that actually wins over the base .is-active rule above (3
+   classes vs. 2), no !important needed. */
+.wallpaper-stack--dimmed .wallpaper-layer.is-active {
+  opacity: 0.4;
+}

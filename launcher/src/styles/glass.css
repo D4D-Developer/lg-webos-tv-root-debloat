@@ -1,0 +1,59 @@
+/* .glass-panel: frosted-glass container.
+   Real webOS 4.x hardware has no backdrop-filter support at all, so the
+   @supports block is the actual fallback path on-device, not a decoration -
+   it must look deliberate on its own (slightly more opaque flat fill),
+   not like a broken blur. Test both paths locally by toggling DevTools'
+   "backdrop-filter" flag or just reading the fallback rule below. */
+
+.glass-panel {
+  position: relative;
+  background: var(--bg-elevated);
+  border: var(--glass-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .glass-panel {
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-panel {
+    background: rgba(18, 20, 26, 0.88);
+  }
+  [data-theme="warm-cinema"] .glass-panel {
+    background: rgba(28, 20, 14, 0.88);
+  }
+  [data-theme="pure-void"] .glass-panel {
+    background: rgba(10, 10, 14, 0.9);
+  }
+}
+
+/* Diagonal light sheen on focus, additive layer so it never fights the
+   blur/fallback background above. */
+.glass-panel::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0.14) 50%,
+    rgba(255, 255, 255, 0) 60%
+  );
+  transform: translateX(-120%);
+  transition: transform 420ms ease;
+  pointer-events: none;
+}
+
+[data-focusable].is-focused .glass-panel::after,
+.glass-panel.is-focused::after {
+  transform: translateX(120%);
+}

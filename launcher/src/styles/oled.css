@@ -1,0 +1,54 @@
+.oled-sleep {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: #000000;
+  z-index: 20;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: var(--safe-margin);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 600ms ease;
+}
+
+.oled-sleep.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.oled-sleep__info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  /* Drifts slowly to spread wear across the panel while in sleep mode;
+     separate from the whole-app periodic pixel-shift in core/oled.js.
+     Applied to the whole clock/date/weather block so they drift together
+     as one unit instead of separating. */
+  transition: transform 8s linear;
+}
+
+.oled-sleep__info > * + * {
+  margin-top: 10px;
+}
+
+.oled-sleep__clock {
+  font-size: 140px;
+  font-weight: 300;
+  line-height: 1.1;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.oled-sleep__date {
+  font-size: 32px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.oled-sleep__weather {
+  font-size: 28px;
+  color: rgba(255, 255, 255, 0.35);
+}
