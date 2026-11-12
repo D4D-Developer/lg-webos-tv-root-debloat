@@ -1,0 +1,24 @@
+#!/bin/sh
+# Template for /var/lib/webosbrew/init.d/50-debloat
+#
+# webos-debloat.sh's own `--install-boot-hook` only bakes in `--only <categories>` and
+# drops any custom `--id`/`--region` you used — see docs/02-debloat.md for why. This is
+# the manually-fixed version: it re-applies your exact, fully-expanded ID list and
+# region as static text, so a future reset of blockedSystemAppList can't silently lose
+# your custom picks.
+#
+# How to build your own:
+#   1. Apply your debloat choices normally (--apply --only ... --id ... --region ...).
+#   2. Extract the live list from the resulting JSON:
+#      grep -o '"com\.[A-Za-z0-9_.-]*"\|"org\.[A-Za-z0-9_.-]*"' \
+#        /var/preferences/com.webos.applicationManager/blockedSystemAppList/<REGION>.json \
+#        | tr -d '"' | tr '\n' ' '
+#   3. Paste that list into REPLACE_WITH_YOUR_ID_LIST below, and your region into
+#      REPLACE_WITH_YOUR_REGION.
+#   4. Test it directly before trusting it: `sh /var/lib/webosbrew/init.d/50-debloat`,
+#      then check /var/lib/webos-debloat/boot.log for errors.
+
+sleep 5
+[ -x /var/lib/webos-debloat/webos-debloat.sh ] && /var/lib/webos-debloat/webos-debloat.sh --apply --id "REPLACE_WITH_YOUR_ID_LIST" --region REPLACE_WITH_YOUR_REGION >>/var/lib/webos-debloat/boot.log 2>&1
+[ -x /var/lib/webos-debloat/webos-debloat.sh ] && /var/lib/webos-debloat/webos-debloat.sh --preload-sync >>/var/lib/webos-debloat/boot.log 2>&1
+exit 0
